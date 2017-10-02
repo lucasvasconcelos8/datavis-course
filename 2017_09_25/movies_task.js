@@ -29,8 +29,8 @@ function graphBars(id, data, attribute, comparator) {
 		.style("width", function (d) {
             return (d[attribute] * pixels /max) + "px";
         })
-				.style("background-color", function(d){
-					return colorScale(numberTo[id]);
+		.style("background-color", function(d){
+						return colorScale(numberTo[id]);
 				})
         .select("span").text(function (d) {
             return d.Film + " - $" + d[attribute];

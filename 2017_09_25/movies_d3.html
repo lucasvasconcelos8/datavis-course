@@ -9,34 +9,37 @@
 </head>
 
 <body>
-  <div class="task" id="1">
+  <div class="task" id="t1">
     <h1>Bilheteria (Em milhões de dólares)</h1>
     <div class="chart" id="box_office"></div>
   </div>
 
-  <div class="task" id="2">
+  <div class="task" id="t2">
     <h1>Orçamentos (Em milhões de dólares)</h1>
     <div class="chart" id="budget"></div>
   </div>
 
-  <div class="task" id="3">
+  <div class="task" id="t3">
     <h1>Lucros (Em milhões de dólares)</h1>
     <div class="chart" id="profit"></div>
   </div>
 
-  <div class="task" id="4">
+  <div class="task" id="t4">
     <h1>Bilheteria por genero (Em milhões de dólares)</h1>
     <div class="chart" id="box_office_by_genre"></div>
 
   <script type="text/javascript">
 		d3.json("movies.json", function(error, json) {
 
+          //question 1 and 2
         	graphBars("box_office", json, "Worldwide_Gross_M", compare);
         	graphBars("budget", json,"Budget_M", compare);
 
-        	var profit= moviesProfit(json)
+          //question 3
+        	var profit = moviesProfit(json)
         	graphBars("profit", profit, "Profit", compare)
 
+          //question bonus
           var genres = groupByGenre(json)
         	graphBars("box_office_by_genre", genres, "Worldwide_Gross_M", compare)
     	});

@@ -79,14 +79,13 @@
 
         var crimeGroup = totalCrimesDimension.group();
 
-        var types = typeGroup.top(Infinity).map(function(d){return d.key})
-        // Setup the charts
-          
+        var typesCrimes = typeGroup.top(Infinity).map(function(d){return d.key})
 
+        // Setup the charts  
         totalCrimesGraph.width(480)
                    .height(150)
                    .margins({top: 10, right: 10, bottom: 20, left: 40})
-                   .x(d3.scale.ordinal().domain(types))
+                   .x(d3.scale.ordinal().domain(typesCrimes))
                    .xUnits(dc.units.ordinal)
                    .brushOn(false)
                    .dimension(totalCrimesDimension)

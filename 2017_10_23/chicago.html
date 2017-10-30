@@ -47,7 +47,7 @@
       <script type="text/javascript">
       // Create the dc.js chart objects & link to divs
       var totalCrimesGraph = dc.barChart("#total-chart")
-      //var crimesPerDayGraph = dc.SeriesChart("#perday-chart")
+      var crimesPerDayGraph = dc.seriesChart("#perday-chart")
 
       var map = L.map('mapid').setView([41.8937762,-87.6652561],10);
       L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a>contributors',maxZoom: 17}).addTo(map);
@@ -61,14 +61,15 @@
         // format our data
         var dtgFormat = d3.time.format("%m/%d/%Y");
         data.forEach(function(d){
-          d.dtg = dtgFormat.parse(d.Date.split(" ")[0]);
-          d.day = d3.time.day(d.date);
+          d.date = dtgFormat.parse(d.Date.split(" ")[0])
+          d.day = d3.time.day(d.date)
           d.lat = +d.Latitude;
           d.lon = +d.Longitude;
           d.crimetype = d["Primary Type"];
 
           var circle = L.circle([d.lat, d.lon], 150, {color: colorScale(d.crimetype),weight: 1,fillColor: colorScale(d.crimetype) ,fillOpacity: 0.5}).addTo(map);
-      });
+          circle.bindPopup("Type: "+d.crimetype);
+        });
 
         // Run the data through crossfilter and load our 'facts'
         var facts = crossfilter(data)
@@ -79,11 +80,11 @@
 
         var crimeGroup = totalCrimesDimension.group();
 
-        var typesCrimes = typeGroup.top(Infinity).map(function(d){return d.key})
+        var typesCrimes = crimeGroup.top(Infinity).map(function(d){return d.key})
 
         // Setup the charts  
-        totalCrimesGraph.width(480)
-                   .height(150)
+        totalCrimesGraph.width(800)
+                   .height(300)
                    .margins({top: 10, right: 10, bottom: 20, left: 40})
                    .x(d3.scale.ordinal().domain(typesCrimes))
                    .xUnits(dc.units.ordinal)
@@ -93,15 +94,34 @@
                    .group(crimeGroup)
                    .yAxisLabel("",10);
        
-        //crimesPerDayGraph.height(150)
-        //             .width(960)
-        //             .margins({top: 10, right: 10, bottom: 20, left: 40})
-        //             .dimension()
-        //             .group()
-        //             .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.dtg; })))
+        var dateDim = facts.dimension(function(d){
+          return d.date;
+        })
+
+        var typeSeriesDim = facts.dimension(function(d){
+          return [d.crimetype,d.date];
+        })
+
+        var typeSeriesGroup = typeSeriesDim.group()
+
+        crimesPerDayGraph.width(800)
+          .height(300)
+          .chart(function(c) { return dc.lineChart(c).interpolate('cardinal'); })
+          .x(d3.time.scale().domain([dateDim.bottom(1)[0].date,dateDim.top(1)[0].date]))
+          .dimension(typeSeriesDim)
+          .group(typeSeriesGroup)
+          .ordinalColors(["orange", "red","blue"])
+          .seriesAccessor(d => d.key[0])
+          .keyAccessor(d => d.key[1])
+          .valueAccessor(d => d.value)
+          .legend(dc.legend().x(50).y(10).itemHeight(13).gap(5));
 
         // Render the Charts
         dc.renderAll();
-      }); 
+      });
+    </script>
+
+
+
   </body>
 </html>

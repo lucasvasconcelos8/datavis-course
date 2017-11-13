@@ -84,16 +84,11 @@
 	info.update = function (feat) {
             //console.log(feat);
 			this._div.innerHTML = '<h5>Número de homicídios</h5>' +  (feat ?
-				'<b>' + feat.properties.NOME + '</b><br />' + homicidiosByName.get(feat.properties.NOME) + ' homicídios'
+				'<b>' + feat.properties.NOME + '</b><br />' + homicidiosByName.get(feat.properties.NOME) + ' homicídios por 100 mil hab'
 				: 'Passe o mouse sobre um bairro');
 	};
 
 	info.addTo(map);
-	
-	// get color depending on number of cases
-	let quantize = d3.scale.quantize()
-    .domain([0, 70])
-    .range(brewerColors);
 
 	function style(feature) {
 		 return {
@@ -140,44 +135,59 @@
 					click: zoomToFeature
 				});
 	}
+
     let homicidiosByName = d3.map();
 
-	d3.csv("data/Homicidio-Populacao -Fortaleza.csv", function(data){
+	// get color depending on number of cases
+	var quantize
+    
+    var rangeColor = colorbrewer.Oranges[9]
+
+	d3.csv("data/Homicidio-PopulacaoFortaleza.csv", function(data){
         //format data
         data.forEach(function(d) {
-            homicidiosByName.set(d.Bairro,+d.HomicidioHab * 100000);
+        	let homs = Math.round(+d.HomicidioHab * 100000);
+            homicidiosByName.set(d.Bairro, homs);
         });
-		
+
+        let domain = d3.extent(data, function(d) {
+        	return homicidiosByName.get(d.Bairro)
+        });
+
+		quantize = d3.scale.quantize()
+	    .domain(domain)
+	    .range(rangeColor);	
+	
 		//bairrosData is defined in file bairros.js		 		
 		geojson = L.geoJson(bairrosData, {
 				style: style,
 				onEachFeature: onEachFeature
 		}).addTo(map);
-		
+
+		let legend = L.control({position: 'bottomright'});
+
+		legend.onAdd = function (map) {
+
+			let div = L.DomUtil.create('div', 'info legend'),
+				labels = [],
+	            n = rangeColor.length,
+				from, to;
+
+			for (let i = 0; i < n; i++) {
+				let c = rangeColor[i];
+	            let fromto = quantize.invertExtent(c);
+				labels.push(
+					'<i style="background:' + rangeColor[i] + '"></i> ' +
+					d3.round(fromto[0]) + (d3.round(fromto[1]) ? '&ndash;' + d3.round(fromto[1]) : '+'));
+			}
+
+			div.innerHTML = labels.join('<br>');
+			return div;
+		};
+
+	   	legend.addTo(map);
+
 	});			
-	
-	let legend = L.control({position: 'bottomright'});
-
-	legend.onAdd = function (map) {
-
-		let div = L.DomUtil.create('div', 'info legend'),
-			labels = [],
-            n = brewerColors.length,
-			from, to;
-
-		for (let i = 0; i < n; i++) {
-			let c = brewerColors[i];
-            let fromto = quantize.invertExtent(c);
-			labels.push(
-				'<i style="background:' + brewerColors[i] + '"></i> ' +
-				d3.round(fromto[0]) + (d3.round(fromto[1]) ? '&ndash;' + d3.round(fromto[1]) : '+'));
-		}
-
-		div.innerHTML = labels.join('<br>');
-		return div;
-	};
-
-   	legend.addTo(map);
 </script>
 
 </body>
